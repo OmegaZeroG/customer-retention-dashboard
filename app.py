@@ -11,8 +11,32 @@ from src.clustering import perform_clustering
 
 st.set_page_config(
     page_title="Customer Segmentation Dashboard",
-    layout="wide"
+    layout="wide",
 )
+
+# ---------------- Custom Style ---------------- #
+
+st.markdown("""
+<style>
+
+[data-testid="stSidebar"]{
+background-color:#111827;
+}
+
+[data-testid="stSidebar"] *{
+color:white;
+}
+
+.metric-card{
+background:#F9FAFB;
+padding:20px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 
 st.title("Customer Segmentation & Retention Dashboard")
 st.write("Analyze customer behavior using **RFM analysis** and **K-Means clustering**.")
@@ -25,16 +49,14 @@ df = load_and_clean_data("data/Online Retail Data Set.csv")
 
 # ---------------- Sidebar Filters ---------------- #
 
-st.sidebar.header("Dashboard Filters")
+st.sidebar.title("Dashboard Filters")
 
-# Country filter
 selected_country = st.sidebar.multiselect(
     "Select Country",
     options=df["Country"].unique(),
     default=df["Country"].unique()
 )
 
-# Prevent empty dataset
 if len(selected_country) == 0:
     st.warning("Please select at least one country.")
     st.stop()
@@ -45,7 +67,6 @@ df = df[df["Country"].isin(selected_country)]
 # ---------------- RFM Analysis ---------------- #
 
 rfm = calculate_rfm(df)
-
 rfm = perform_clustering(rfm)
 
 
@@ -61,7 +82,6 @@ segment_map = {
 rfm["Segment"] = rfm["Cluster"].map(segment_map)
 
 
-# Segment filter
 selected_segment = st.sidebar.multiselect(
     "Select Customer Segment",
     options=rfm["Segment"].unique(),
@@ -73,14 +93,12 @@ filtered_rfm = rfm[rfm["Segment"].isin(selected_segment)]
 
 # ---------------- Key Metrics ---------------- #
 
-st.subheader("Key Business Metrics")
+st.subheader(" Key Business Metrics")
 
 col1, col2, col3 = st.columns(3)
 
 col1.metric("Total Customers", filtered_rfm.shape[0])
-
 col2.metric("Average Customer Spend", round(filtered_rfm["Monetary"].mean(), 2))
-
 col3.metric("Total Revenue", round(filtered_rfm["Monetary"].sum(), 2))
 
 
@@ -96,10 +114,43 @@ fig_bar = px.bar(
     x="Segment",
     y="Customers",
     color="Segment",
+    color_discrete_sequence=px.colors.qualitative.Set2,
     title="Customers per Segment"
 )
 
 st.plotly_chart(fig_bar, use_container_width=True)
+
+
+# ---------------- Pie Charts ---------------- #
+
+st.subheader("Segment Overview")
+
+col1, col2 = st.columns(2)
+
+# Segment share
+fig_pie = px.pie(
+    cluster_counts,
+    names="Segment",
+    values="Customers",
+    title="Customer Segment Share",
+    color_discrete_sequence=px.colors.qualitative.Pastel
+)
+
+col1.plotly_chart(fig_pie, use_container_width=True)
+
+
+# Revenue share
+revenue_segment = filtered_rfm.groupby("Segment")["Monetary"].sum().reset_index()
+
+fig_revenue_pie = px.pie(
+    revenue_segment,
+    names="Segment",
+    values="Monetary",
+    title="Revenue Contribution by Segment",
+    color_discrete_sequence=px.colors.qualitative.Set3
+)
+
+col2.plotly_chart(fig_revenue_pie, use_container_width=True)
 
 
 # ---------------- Customer Segmentation Scatter ---------------- #
@@ -111,6 +162,7 @@ fig_scatter = px.scatter(
     x="Frequency",
     y="Monetary",
     color="Segment",
+    color_discrete_sequence=px.colors.qualitative.Bold,
     title="Customer Segments"
 )
 
@@ -143,7 +195,8 @@ country_revenue = (
 
 fig_country = px.bar(
     country_revenue,
-    title="Top Countries by Revenue"
+    title="Top Countries by Revenue",
+    color_discrete_sequence=["#6366F1"]
 )
 
 st.plotly_chart(fig_country, use_container_width=True)
@@ -161,6 +214,7 @@ fig_trend = px.line(
     monthly_revenue,
     x="Month",
     y="TotalPrice",
+    markers=True,
     title="Monthly Revenue Trend"
 )
 

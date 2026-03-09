@@ -48,7 +48,11 @@ st.write("Analyze customer behavior using **RFM analysis** and **K-Means cluster
 
 # ---------------- Load Data ---------------- #
 
-df = load_and_clean_data("data/Online Retail Data Set.csv")
+@st.cache_data
+def get_data():
+    return load_and_clean_data("data/Online Retail Data Set.csv")
+
+df = get_data()
 
 
 # ---------------- Sidebar Filters ---------------- #

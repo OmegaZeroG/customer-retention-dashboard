@@ -1,6 +1,7 @@
-streamlit==1.30.0
+streamlit==1.42.0
 pandas
 numpy
 plotly
 scikit-learn
-altair==4.2.2
+altair>=5.0.0
+pillow>=10.4.0

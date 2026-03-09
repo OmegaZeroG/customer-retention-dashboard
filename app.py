@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import sys
+import os
+
+sys.path.append(os.path.abspath("."))
 
 from src.data_cleaning import load_and_clean_data
 from src.rfm_analysis import calculate_rfm
